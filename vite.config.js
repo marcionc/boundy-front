@@ -8,6 +8,13 @@ export default defineConfig({
   base: process.env.NODE_ENV === 'production' 
     ? 'https://bounky.com.br/' 
     : '/',
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify(
+      process.env.NODE_ENV === 'production' 
+        ? 'https://bounky-back.onrender.com' 
+        : 'http://localhost:8000'
+    )
+  },
   build: {
     rollupOptions: {
       output: {
@@ -29,7 +36,7 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
-        secure: false
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   }

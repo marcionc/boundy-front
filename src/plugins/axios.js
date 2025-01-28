@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Criar instância do axios com configurações padrão
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -23,7 +23,7 @@ api.interceptors.request.use(
     }
 
     // Log da requisição em desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log('Request:', {
         url: config.url,
         method: config.method,
@@ -35,7 +35,6 @@ api.interceptors.request.use(
     return config
   },
   (error) => {
-    console.error('Request error:', error)
     return Promise.reject(error)
   }
 )
@@ -43,59 +42,21 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Log da resposta em desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Response:', {
-        status: response.status,
-        data: response.data,
-        headers: response.headers
-      })
-    }
     return response
   },
-  async (error) => {
-    const originalRequest = error.config
-
-    // Log detalhado do erro em desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Response error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        headers: error.response?.headers,
-        originalUrl: originalRequest?.url
-      })
+  (error) => {
+    // Tratar erros de requisição
+    if (error.response) {
+      // O servidor respondeu com um status diferente de 2xx
+      console.error('Erro de resposta:', error.response.data)
+      console.error('Status:', error.response.status)
+    } else if (error.request) {
+      // A requisição foi feita, mas não houve resposta
+      console.error('Sem resposta do servidor')
+    } else {
+      // Algo aconteceu ao configurar a requisição
+      console.error('Erro ao configurar requisição:', error.message)
     }
-
-    // Se o erro for 401 e não for uma tentativa de refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      const refreshToken = localStorage.getItem('refreshToken')
-
-      if (refreshToken) {
-        try {
-          const response = await api.post('/auth/refresh/', { refresh: refreshToken })
-          const { access } = response.data
-          
-          localStorage.setItem('token', access)
-          originalRequest.headers.Authorization = `Bearer ${access}`
-          
-          return api(originalRequest)
-        } catch (refreshError) {
-          console.error('Refresh token error:', refreshError)
-          localStorage.clear()
-          window.location.href = '/login'
-          return Promise.reject(refreshError)
-        }
-      }
-    }
-
-    // Se for erro de CORS ou Network
-    if (!error.response) {
-      console.error('Network/CORS error:', error.message)
-      return Promise.reject(new Error('Erro de conexão com o servidor. Verifique se o servidor está rodando e acessível.'))
-    }
-
-    console.error('Response error:', error.response?.data || error.message)
     return Promise.reject(error)
   }
 )
