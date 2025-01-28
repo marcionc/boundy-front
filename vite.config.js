@@ -6,7 +6,7 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig({
   plugins: [vue()],
   base: process.env.NODE_ENV === 'production' 
-    ? 'https://bounky.com.br/' 
+    ? 'https://bounky-front.onrender.com/' 
     : '/',
   define: {
     'import.meta.env.VITE_API_URL': JSON.stringify(
