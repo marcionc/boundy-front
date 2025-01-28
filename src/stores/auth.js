@@ -23,7 +23,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('refreshToken')
 
         // Fazer login
-        const response = await api.post('/auth/login/', {
+        const response = await api.post('/api/token/', {
           username,
           password
         })
@@ -85,16 +85,16 @@ export const useAuthStore = defineStore('auth', {
           throw new Error('Refresh token não encontrado')
         }
 
-        const response = await api.post('/auth/token/refresh/', {
+        const refreshResponse = await api.post('/api/token/refresh/', {
           refresh: this.refreshToken
         })
 
-        if (!response.data?.access) {
+        if (!refreshResponse.data?.access) {
           throw new Error('Novo token de acesso não recebido')
         }
 
-        this.token = response.data.access
-        localStorage.setItem('token', response.data.access)
+        this.token = refreshResponse.data.access
+        localStorage.setItem('token', refreshResponse.data.access)
         return true
       } catch (error) {
         console.error('Erro ao renovar token:', error.response?.data || error.message)
