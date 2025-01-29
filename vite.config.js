@@ -11,7 +11,7 @@ export default defineConfig({
   define: {
     'import.meta.env.VITE_API_URL': JSON.stringify(
       process.env.NODE_ENV === 'production' 
-        ? 'https://bounky-back.onrender.com' 
+        ? 'https://bounky.com.br' 
         : 'http://localhost:8000'
     )
   },
